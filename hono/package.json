@@ -2,12 +2,10 @@
   "name": "hono",
   "type": "module",
   "dependencies": {
-    "hono": "^4.12.10",
-    "resend": "^6.10.0"
+    "hono": "^4.8.9"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
-    "tsx": "^4.7.1",
     "typescript": "^5.8.3"
   }
 }
