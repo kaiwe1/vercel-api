@@ -5,8 +5,8 @@ const app = new Hono()
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const welcomeStrings = [
-  'Hello Hono!',
-  'To learn more about Hono on Vercel, visit https://vercel.com/docs/frameworks/backend/hono'
+  'Hello!',
+  'You found my API endpoint. Please don\'t do evil things with it.',
 ]
 
 app.get('/', (c) => {
@@ -16,11 +16,14 @@ app.get('/', (c) => {
 app.post('/webhook', async (c) => {
   const event = await c.req.json();
 
+  console.log('Processing email.received event');
+  console.log('Event:', event);
+
   if (event.type === 'email.received') {
     const { data, error } = await resend.emails.receiving.forward({
       emailId: event.data.email_id,
       to: 'kaiwei.zhqwq@gmail.com',
-      from: 'onboarding@resend.dev',
+      from: 'me@kaiweizhang.com',
     });
 
     if (error) {
