@@ -29,6 +29,7 @@ app.post('/webhook', async (c) => {
     });
 
     if (error) {
+      console.error('Error forwarding email:', error);
       return c.text(`Error: ${error.message}`, 500);
     }
 
