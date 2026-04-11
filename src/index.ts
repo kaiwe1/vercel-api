@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { Resend } from 'resend'
+import type { WebhookEventPayload } from 'resend'
 
 const app = new Hono()
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -15,7 +16,7 @@ app.get('/', (c) => {
 })
 
 app.post('/webhook', async (c) => {
-  const event = await c.req.json();
+  const event = await c.req.json<WebhookEventPayload>();
 
   console.log('Processing email.received event');
   console.log('Event:', event);
@@ -24,7 +25,7 @@ app.post('/webhook', async (c) => {
     const { data, error } = await resend.emails.receiving.forward({
       emailId: event.data.email_id,
       to: 'kaiwei.zhqwq@gmail.com',
-      from: 'me@kaiweizhang.com',
+      from: event.data.from,
     });
 
     if (error) {
