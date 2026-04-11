@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { Resend } from 'resend'
 import type { WebhookEventPayload } from 'resend'
+import { simpleParser } from 'mailparser';
 
 const app = new Hono()
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -22,15 +23,54 @@ app.post('/webhook', async (c) => {
   console.log('Event:', event);
 
   if (event.type === 'email.received') {
-    const { data, error } = await resend.emails.receiving.forward({
-      emailId: event.data.email_id,
-      to: 'kaiwei.zhqwq@gmail.com',
-      from: event.data.from,
+    // Get the email metadata
+    const { data: email } = await resend
+      .emails
+      .receiving
+      .get(event.data.email_id)
+
+    // Download the raw email content if available
+    if (!email?.raw?.download_url) {
+      console.error('No raw email data available');
+      return c.text('No raw email data available', 500);
+    }
+
+    const rawResponse = await fetch(email.raw.download_url);
+    const rawEmailContent = await rawResponse.text();
+
+    // Parse the raw email to extract content and attachments
+    const parsed = await simpleParser(rawEmailContent, {
+      skipImageLinks: true,
+    });
+
+    // Extract attachments with content_id for inline images
+    const attachments = parsed.attachments.map((attachment) => {
+      // Strip < and > from content IDs for proper inline image handling
+      const contentId = attachment.contentId
+        ? attachment.contentId.replace(/^<|>$/g, '')
+        : undefined;
+
+      return {
+        filename: attachment.filename,
+        content: attachment.content.toString('base64'),
+        content_type: attachment.contentType,
+        content_id: contentId || undefined,
+      };
+    });
+
+    const { data, error } = await resend.emails.send({
+      from: `${event.data.from} <forward@kaiweizhang.com>`,
+      to: ['kaiwei.zhqwq@gmail.com'],
+      subject: email.subject || '(no subject)',
+      html: parsed.html || '(no html)',
+      text: parsed.text || '(no text)',
+      attachments: attachments.length > 0 ? attachments : undefined,
+      replyTo: event.data.from,
     });
 
     if (error) {
-      console.error('Error forwarding email:', error);
-      return c.text(`Error: ${error.message}`, 500);
+      console.error('Error sending email:', error);
+      return c.text('Error sending email', 500);
     }
 
     return c.json(data);
