@@ -6,16 +6,6 @@ import { simpleParser } from 'mailparser';
 const app = new Hono()
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const welcomeStrings = [
-  'Hello!',
-  'You found my API endpoint. Please don\'t do evil things with it.',
-  'Contact me: kaiwei.zhqwq@gmail.com'
-]
-
-app.get('/', (c) => {
-  return c.text(welcomeStrings.join('\n\n'))
-})
-
 app.post('/webhook', async (c) => {
   const event = await c.req.json<WebhookEventPayload>();
 
