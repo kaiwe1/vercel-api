@@ -49,7 +49,7 @@ app.post('/webhook', async (c) => {
     });
 
     const { data, error } = await resend.emails.send({
-      from: `${event.data.from} <forward@kaiweizhang.com>`,
+      from: `${event.data.from} via Resend Forward <resend.forward@kaiweizhang.com>`,
       to: ['kaiwei.zhqwq@gmail.com'],
       subject: email.subject || '(no subject)',
       html: parsed.html || '(no html)',
